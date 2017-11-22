@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#PBS -M 'lior.ruba@gmail.com'
+#PBS -e 'thermodel.err'
+#PBS -o 'thermodel.out'
+#PBS -q sleep
+#PBS -l select=1:ncpus=1:mem=8gb
+
+cd $PBS_O_WORKDIR
+echo $PBS_O_WORKDIR
+# Set directories:
+export SIM_DIR=pwd;
+
+#run the job
+/usr/bin/time -p /usr/local/bin/matlab_2013b << EOF
+disp(pwd);
+
+thermodel
+
+EOF

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#PBS -M 'lior.ruba@gmail.com'
+#PBS -o "/home/$USER/%SIMULATION_NAME%/logs/shadow.out"
+#PBS -e "/home/$USER/%SIMULATION_NAME%/logs/shadow.err"
+#PBS -q sleep
+#PBS -l select=1:ncpus=1:mem=16gb
+
+# Create your scratch directory on the local disk
+
+#Run the job
+
+/usr/bin/time -p /usr/local/bin/matlab_2013b << EOF
+
+[simDir, ~, ~] = pwd;
+
+% Load configuration files and assign variables:
+load([simDir,'/config/solarAzimuth.mat']);
+load([simDir,'/config/solarZenithAngle.mat']);
+
+for timeStep=1:length(solarAzimuthVector)
+	calcShadowMatrix(solarIncidenceVector(timeStep), solarAzimuthVector(timeStep), simDir);
+end
+
+EOF

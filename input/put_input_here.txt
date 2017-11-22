@@ -1,0 +1,1 @@
+Place input file in this folder, or use the configuration file to automatically generate an input file.

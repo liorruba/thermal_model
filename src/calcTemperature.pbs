@@ -1,0 +1,17 @@
+#!/bin/sh
+
+#PBS -M 'lior.ruba@gmail.com'
+#PBS -q sleep
+#PBS -l select=1:ncpus=1:mem=8gb
+
+#Run the job
+time -p /usr/local/bin/matlab_2013b << EOF
+
+elementRange = ${elementRangeMin}:${elementRangeMax}
+simDir = '$simDir';
+
+cd([simDir,'/src/']);
+
+calcTemperature(elementRange, ${dt}, ${timeStep}, simDir)
+
+EOF
