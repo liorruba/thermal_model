@@ -21,10 +21,10 @@ simDir = pwd;
 
 % Add the source directory to the script path:
 if exist([simDir,'/src'],'dir')
-	addpath([simDir,'/src']);
+    addpath([simDir,'/src']);
     addpath([simDir,'/config']);
 else
-	writeToLog('Cannot continue, src directory is missing.', true);
+    writeToLog('Cannot continue, src directory is missing.', true);
 end
 
 
@@ -36,24 +36,24 @@ end
 
 % Read the settings file:
 if exist([simDir,'/config/makeSettings.m'],'file')
-	% Create the bin in the config directory to store settings in:
-	mkdir([simDir, '/config/bin']);
-	global settings;
-	settings = makeSettings(simDir);
+    % Create the bin in the config directory to store settings in:
+    mkdir([simDir, '/config/bin']);
+    global settings;
+    settings = makeSettings(simDir);
 else
-	error('Cannot continue, makeConfig.m or makeSettings.m are missing.');
+    error('Cannot continue, makeConfig.m or makeSettings.m are missing.');
 end
 
 % Read the configuration files:
 if exist([simDir,'/config/makeConfig.m'],'file')
     [mapProp, physProp, constants] = makeConfig(simDir);
 else
-	writeToLog('Cannot continue, config/makeConfig.m is missing.', true);
+    writeToLog('Cannot continue, config/makeConfig.m is missing.', true);
 end
 
 % Remove previous log file:
 if exist([simDir, '/logs/log.txt'], 'file')
-	delete([simDir,'/logs/log.txt']);
+    delete([simDir,'/logs/log.txt']);
 end
 
 % Clear previous output files if requested:
@@ -68,9 +68,9 @@ end
 directoriesToCreate = {'/input', '/config/bin', '/logs/RCM', '/logs/VFM', '/logs/Flux', '/logs/Shadow', '/logs/Temperature', '/output/Shadow', '/output/buffTotalFlux', '/output/buffTss', '/output/RCM', '/output/VFM', '/output/Shadow', '/output/Flux', '/output/temperature'};
 
 for ii=1:length(directoriesToCreate)
-	if ~exist([simDir, directoriesToCreate{ii}], 'dir')
-		mkdir([simDir, directoriesToCreate{ii}]);
-	end
+    if ~exist([simDir, directoriesToCreate{ii}], 'dir')
+        mkdir([simDir, directoriesToCreate{ii}]);
+    end
 end
 
 writeToLog('THERMODEL initialized.', true);
@@ -102,22 +102,22 @@ writeToLog(['Simulation Latitude: ',num2str(mapProp.latitude), '.'], true);
 % Load the topography (Z) file and handle it.
 % If the user has selected a readymade topography:
 if settings.createSphericalCrater
-   % First, remove the old topography in the input directory:
-   if exist([settings.dirPath.input,'Z.mat'], 'file');
-      delete([settings.dirPath.input,'Z.mat']);
-   end
-   writeToLog(['Creating topography: spherical crater with depth to diameter ', num2str(mapProp.depthToDiameter)]);
-   Z = sphericalCrater(mapProp.sphericalCraterRadius, mapProp.depthToDiameter, mapProp.mapSize);
-   
+    % First, remove the old topography in the input directory:
+    if exist([settings.dirPath.input,'Z.mat'], 'file');
+        delete([settings.dirPath.input,'Z.mat']);
+    end
+    writeToLog(['Creating topography: spherical crater with depth to diameter ', num2str(mapProp.depthToDiameter)]);
+    Z = sphericalCrater(mapProp.sphericalCraterRadius, mapProp.depthToDiameter, mapProp.mapSize);
+    
 elseif settings.createRandomSurface
-   % First, remove the old topography in the input directory:
-   if exist([settings.dirPath.input,'Z.mat'], 'file');
-      delete([settings.dirPath.input,'Z.mat']);
-   end  
-
-   writeToLog(['Creating random topography: Gaussian slope distribution with RMS slope ', num2str(mapProp.rmsSlope)]);
-   Z = gaussianRandomSurface(mapProp.mapSize, mapProp.rmsSlope);
-   
+    % First, remove the old topography in the input directory:
+    if exist([settings.dirPath.input,'Z.mat'], 'file');
+        delete([settings.dirPath.input,'Z.mat']);
+    end
+    
+    writeToLog(['Creating random topography: Gaussian slope distribution with RMS slope ', num2str(mapProp.rmsSlope)]);
+    Z = gaussianRandomSurface(mapProp.mapSize, mapProp.rmsSlope);
+    
 else
     writeToLog('Using a custom topography from the input folder.', true);
     if exist([settings.dirPath.input,'Z.mat'],'file')
@@ -134,38 +134,38 @@ Z = Z / mapProp.scaleFactor; save([settings.dirPath.input,'Z.mat'], 'Z');
 mapProp.mapSize = length(Z); save([simDir,'/config/bin/mapProp.mat'], 'mapProp');
 
 % Read the data file (azimuth, incidence and time):
-if exist([simDir,'/config/data.m'],'file') 
-	run([simDir,'/config/data.m']);
-
-	% Calculate the time vector in case no time vector has been given:
-	if isempty(time)
-		time = calcTimeVector(solarAzimuth, solarZenithAngle, simDir);
-	end
+if exist([simDir,'/config/data.m'],'file')
+    run([simDir,'/config/data.m']);
+    
+    % Calculate the time vector in case no time vector has been given:
+    if isempty(time)
+        time = calcTimeVector(solarAzimuth, solarZenithAngle, simDir);
+    end
 else
-	writeToLog('A custom config/data.m file was not found. Creating data.m from input parameters.', true);
-	
-	if ( settings.initializationLengthInSolarDays > 0 && settings.timeStepsPerDayIni > 0)
-		[solarAzimuthIni, solarZenithAngleIni, timeIni] = calcSunTrajectory(physProp.solarDeclination, mapProp.latitude, settings.timeStepsPerDayIni, settings.initializationLengthInSolarDays, physProp.rotationPeriod);
-	else
-		solarAzimuthIni = [];
-		solarZenithAngleIni = [];
-		timeIni = 0;
-	end
-
-	[solarAzimuthSim, solarZenithAngleSim, timeSim] = calcSunTrajectory(physProp.solarDeclination, mapProp.latitude, settings.timeStepsPerDaySim, settings.simulationLengthInSolarDays ,physProp.rotationPeriod);
-
-	% Combining to one vector:
-	solarAzimuth = [solarAzimuthIni solarAzimuthSim];
-	solarZenithAngle = [solarZenithAngleIni solarZenithAngleSim];
-	% In order to get the correct time vector, one must calculate timeSim+the
-	% last time step in timeIni plus the new dt.
-	time = [timeIni timeSim+timeIni(end)+(timeSim(2)-timeSim(1))];
-
-	% Since the time vector has an additional value at the beginning (zero) and due to the CN method requiring one extra time step, the solar azimuth and incidence vectors
-	% will be extended:
-	solarZenithAngle = [solarZenithAngle solarZenithAngleSim(1:(length(time)-length(solarZenithAngle)))];
-	solarAzimuth = [solarAzimuth solarAzimuthSim(1:(length(time)-length(solarAzimuth)))];
-
+    writeToLog('A custom config/data.m file was not found. Creating data.m from input parameters.', true);
+    
+    if ( settings.initializationLengthInSolarDays > 0 && settings.timeStepsPerDayIni > 0)
+        [solarAzimuthIni, solarZenithAngleIni, timeIni] = calcSunTrajectory(physProp.solarDeclination, mapProp.latitude, settings.timeStepsPerDayIni, settings.initializationLengthInSolarDays, physProp.rotationPeriod);
+    else
+        solarAzimuthIni = [];
+        solarZenithAngleIni = [];
+        timeIni = 0;
+    end
+    
+    [solarAzimuthSim, solarZenithAngleSim, timeSim] = calcSunTrajectory(physProp.solarDeclination, mapProp.latitude, settings.timeStepsPerDaySim, settings.simulationLengthInSolarDays ,physProp.rotationPeriod);
+    
+    % Combining to one vector:
+    solarAzimuth = [solarAzimuthIni solarAzimuthSim];
+    solarZenithAngle = [solarZenithAngleIni solarZenithAngleSim];
+    % In order to get the correct time vector, one must calculate timeSim+the
+    % last time step in timeIni plus the new dt.
+    time = [timeIni timeSim+timeIni(end)+(timeSim(2)-timeSim(1))];
+    
+    % Since the time vector has an additional value at the beginning (zero) and due to the CN method requiring one extra time step, the solar azimuth and incidence vectors
+    % will be extended:
+    solarZenithAngle = [solarZenithAngle solarZenithAngleSim(1:(length(time)-length(solarZenithAngle)))];
+    solarAzimuth = [solarAzimuth solarAzimuthSim(1:(length(time)-length(solarAzimuth)))];
+    
 end
 
 writeToLog(['Simulation solar Azimuth Vector:', toCommaDelimitedString(solarAzimuth)]);
@@ -179,9 +179,9 @@ save([simDir,'/config/bin/solarZenithAngle.mat'], 'solarZenithAngle');
 save([simDir,'/config/bin/time.mat'], 'time');
 
 if (settings.numberOfJobs == 1)
-	writeToLog('Number of jobs = 1, running standalone version.');
+    writeToLog('Number of jobs = 1, running standalone version.');
 else
-	writeToLog('Number of jobs > 1, running parallel version.');
+    writeToLog('Number of jobs > 1, running parallel version.');
 end
 
 
@@ -192,16 +192,16 @@ end
 [jobSize, lastJobSize] = calculateJobSize(mapProp.mapSize, settings.numberOfJobs);
 
 if (settings.runRCM)
-	writeToLog('Sending Ray Casting Matrix jobs.',true);
-
-	if (settings.numberOfJobs == 1)
-		% Just run the ray casting script to all elements in Z.
-		createRCM(1:numel(Z), simDir);
-
-	elseif (settings.numberOfJobs > 1)
-		% Divide into jobs.
-		for (ii=1:settings.numberOfJobs)
-			[elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
+    writeToLog('Sending Ray Casting Matrix jobs.',true);
+    
+    if (settings.numberOfJobs == 1)
+        % Just run the ray casting script to all elements in Z.
+        createRCM(1:numel(Z), simDir);
+        
+    elseif (settings.numberOfJobs > 1)
+        % Divide into jobs.
+        for (ii=1:settings.numberOfJobs)
+            [elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
             jobName = ['RCM', num2str(ii),'_',settings.simulationName];
             % Truncate at 8 characters due to qsub's limitation:
             jobName = jobName(1:8);
@@ -214,27 +214,27 @@ if (settings.runRCM)
             [status, output] = system(command);
             writeToLog(output,true);
             writeToLog(['Sending job ',jobName]);
-		end
-
-		waitToFinish(30, simDir);
-	end
-writeToLog('Finished RCM calculation.');
+        end
+        
+        waitToFinish(30, simDir);
+    end
+    writeToLog('Finished RCM calculation.');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % VIEW FACTOR MATRIX (VFM) CALCULATION %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (settings.runVFM)
-	writeToLog('Sending View Factor Matrix jobs.',true);
-
-	if (settings.numberOfJobs == 1)
-		% Just run the view factor script to all elements in Z.
-		createVFM(1:numel(Z), simDir);
-
-	elseif (settings.numberOfJobs > 1)
-		% Divide into jobs.
-		for (ii=1:settings.numberOfJobs)
-			[elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
+    writeToLog('Sending View Factor Matrix jobs.',true);
+    
+    if (settings.numberOfJobs == 1)
+        % Just run the view factor script to all elements in Z.
+        createVFM(1:numel(Z), simDir);
+        
+    elseif (settings.numberOfJobs > 1)
+        % Divide into jobs.
+        for (ii=1:settings.numberOfJobs)
+            [elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
             jobName = ['VFM', num2str(ii),'_',settings.simulationName];
             % Truncate at 8 characters due to qsub's limitation:
             jobName = jobName(1:8);
@@ -243,15 +243,15 @@ if (settings.runVFM)
             args=['elementRangeMax="', num2str(elementRangeMax),'",elementRangeMin="', num2str(elementRangeMin),'",simDir="', simDir,'"'];
             command = sprintf(['ssh liorr@chemfarm ''qsub -N ', jobName ,' -v ',args,' -e ', errorPath, ' -o ', outputPath,' ',settings.dirPath.src,'/createVFM.pbs''']);
             writeToLog(command, true);
-
+            
             [status, output] = system(command);
             writeToLog(output,true);
             writeToLog(['Sending job ',jobName]);
-		end
-
-		waitToFinish(30, simDir);
-	end
-
+        end
+        
+        waitToFinish(30, simDir);
+    end
+    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -270,26 +270,54 @@ if (settings.runShadow)
         
         % If the solar incidence matrix is not in [0,90], the sun is below the horizon (everything is shadowed):
         if (solarZenithAngle(timeStep) < 0 || solarZenithAngle(timeStep) >= 90)
-            solarFluxMatrix = zeros(size(Z));
+            solarFluxMatrix = true(size(Z));
             save([settings.dirPath.output, 'Shadow/solarFluxMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'solarFluxMatrix');
-        else         
+        else
             [finiteSunZenithAngle, finiteSunAzimuth] = finiteSunCoordinates(solarZenithAngle(timeStep), solarAzimuth(timeStep), simDir);
             
             for sunPix = 1:numel(finiteSunZenithAngle)
-                [buffShad, buffSolar] = calcShadowMatrix(finiteSunZenithAngle(sunPix), finiteSunAzimuth(sunPix), simDir);
-                shadowMatrix(:,:,sunPix) = buffShad; 
-                solarFluxMatrix(:,:,sunPix) = buffSolar; 
+                [buffShad, buffShadDepth, buffSolar] = calcShadowMatrix(finiteSunZenithAngle(sunPix), finiteSunAzimuth(sunPix), simDir);
+                shadowMatrix(:,:,sunPix) = buffShad;
+                shadowDepthMatrix(:,:,sunPix) = buffShadDepth;
+                solarFluxMatrix(:,:,sunPix) = buffSolar;
             end
             
             shadowMatrix = any(shadowMatrix,3);
+            shadowDepthMatrix = min(shadowDepthMatrix,[],3);
             solarFluxMatrix = sum(solarFluxMatrix,3);
             
             save([settings.dirPath.output, 'Shadow/shadowMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'shadowMatrix');
+            save([settings.dirPath.output, 'Shadow/shadowDepthMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'shadowDepthMatrix');
             save([settings.dirPath.output, 'Shadow/solarFluxMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'solarFluxMatrix');
         end
     end
+    
+    if ~exist([settings.dirPath.output, 'Shadow/permShadowMatrix.mat'], 'file')
+        tt = 1;
+        
+        % Create permanent shadow (and depth) matrices
+        for timeStep=1:length(solarZenithAngle)
+            if (solarZenithAngle(timeStep) < 90)
+                % Load the shadow and shadow depth matrices:
+                load([settings.dirPath.output, 'Shadow/shadowMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)),'.mat']);
+                load([settings.dirPath.output, 'Shadow/shadowDepthMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)),'.mat']);
+                
+                % Save the shadow matrices to a 3D array in order to form the
+                % permanent shadow (and depth) matrices:
+                buffPermShadowMatrix(:,:,tt) = shadowMatrix;
+                buffPermShadowDepthMatrix(:,:,tt) = shadowDepthMatrix;
+                tt = tt + 1;
+            end
+        end
+        
+        permShadowMatrix = all(buffPermShadowMatrix, 3);
+        permShadowDepthMatrix = min(buffPermShadowDepthMatrix, [], 3);
+        
+        save([settings.dirPath.output, 'Shadow/permShadowMatrix.mat'], 'permShadowMatrix');
+        save([settings.dirPath.output, 'Shadow/permShadowDepthMatrix.mat'], 'permShadowDepthMatrix');
+    end
+    
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TOTAL FLUX AND TEMPERATURE CALCULATION %
@@ -299,54 +327,54 @@ writeToLog('Starting total flux and temperature calculation.');
 % Create all required data output files:
 writeToLog('Preallocating memory to all output variables.');
 if (~exist([settings.dirPath.output,'Tsurf.mat'],'file'))
-	Tsurf=zeros(length(Z), length(Z), length(time));
-	% Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
-	save([settings.dirPath.output,'Tsurf.mat'],'Tsurf','-v7.3');
+    Tsurf=zeros(length(Z), length(Z), length(time));
+    % Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
+    save([settings.dirPath.output,'Tsurf.mat'],'Tsurf','-v7.3');
 
-	if (exist([settings.dirPath.output,'Tsurf.mat'], 'file'))
-		writeToLog('Tsurf.mat successfully preallocated.');
-	else
-		writeToLog('Tsurf.mat was not successfully preallocated.');
-	end
+    if (exist([settings.dirPath.output,'Tsurf.mat'], 'file'))
+        writeToLog('Tsurf.mat successfully preallocated.');
+    else
+        writeToLog('Tsurf.mat was not successfully preallocated.');
+    end
 
-	totalFlux = zeros(size(Tsurf));
-	% Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
-	save([settings.dirPath.output,'totalFlux.mat'],'totalFlux','-v7.3');
+    totalFlux = zeros(size(Tsurf));
+    % Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
+    save([settings.dirPath.output,'totalFlux.mat'],'totalFlux','-v7.3');
 
-	if (exist([settings.dirPath.output,'totalFlux.mat'], 'file'))
-		writeToLog('totalFlux.mat successfully preallocated.');
-	else
-		writeToLog('totalFlux.mat was not successfully preallocated.');
-	end
-	clear totalFlux;
+    if (exist([settings.dirPath.output,'totalFlux.mat'], 'file'))
+        writeToLog('totalFlux.mat successfully preallocated.');
+    else
+        writeToLog('totalFlux.mat was not successfully preallocated.');
+    end
+    clear totalFlux;
 
-	emissionFlux = zeros(size(Tsurf));
-	% Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
-	save([settings.dirPath.output,'emissionFlux.mat'],'emissionFlux','-v7.3');
-	
-	if (exist([settings.dirPath.output,'emissionFlux.mat'], 'file'))
-		writeToLog('emissionFlux.mat successfully preallocated.');
-	else
-		writeToLog('emissionFlux.mat was not successfully preallocated.');
-	end
+    emissionFlux = zeros(size(Tsurf));
+    % Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
+    save([settings.dirPath.output,'emissionFlux.mat'],'emissionFlux','-v7.3');
 
-	clear emissionFlux;
-    
-	reflectionFlux = zeros(size(Tsurf));
-	% Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
-	save([settings.dirPath.output,'reflectionFlux.mat'],'reflectionFlux','-v7.3');
+    if (exist([settings.dirPath.output,'emissionFlux.mat'], 'file'))
+        writeToLog('emissionFlux.mat successfully preallocated.');
+    else
+        writeToLog('emissionFlux.mat was not successfully preallocated.');
+    end
 
-	if (exist([settings.dirPath.output,'reflectionFlux.mat'], 'file'))
-		writeToLog('reflectionFlux.mat successfully preallocated.');
-	else
-		writeToLog('reflectionFlux.mat was not successfully preallocated.');
-	end
+    clear emissionFlux;
 
-	clear reflectionFlux;
+    reflectionFlux = zeros(size(Tsurf));
+    % Save Tsurf as a -v7.3 file so that it could be partially loaded into memory:
+    save([settings.dirPath.output,'reflectionFlux.mat'],'reflectionFlux','-v7.3');
+
+    if (exist([settings.dirPath.output,'reflectionFlux.mat'], 'file'))
+        writeToLog('reflectionFlux.mat successfully preallocated.');
+    else
+        writeToLog('reflectionFlux.mat was not successfully preallocated.');
+    end
+
+    clear reflectionFlux;
 
 else
-	writeToLog('Old Tsurf.mat was found in output folder, continuing previous simulation.', 'true');
-	load([settings.dirPath.output,'Tsurf.mat']);
+    writeToLog('Old Tsurf.mat was found in output folder, continuing previous simulation.', 'true');
+    load([settings.dirPath.output,'Tsurf.mat']);
 end
 
 % Find the first zero element in the kth dimension of Tsurf to use as the first timestep.
@@ -359,58 +387,58 @@ clear Tsurf;
 
 % If flux and temperature calculation was requested:
 if (settings.runFluxAndTemperature)
-	writeToLog('Beginning flux and temperature calculation');
+    writeToLog('Beginning flux and temperature calculation');
 
-	% If the model runs as a stand alone:
-	if (settings.numberOfJobs == 1)
-		for ( timeStep = firstk:(lastk-1) )
-			if (mod(timeStep, 5)) == 0
-				copyfile('output/Tsurf.mat','output/Tsurf_bu.mat', 'f');
-			end
-			
-			writeToLog(['Beginning time step ', num2str(timeStep), '.'], true);        
-            
+    % If the model runs as a stand alone:
+    if (settings.numberOfJobs == 1)
+        for ( timeStep = firstk:(lastk-1) )
+            if (mod(timeStep, 5)) == 0
+                copyfile('output/Tsurf.mat','output/Tsurf_bu.mat', 'f');
+            end
+
+            writeToLog(['Beginning time step ', num2str(timeStep), '.'], true);
+
             for scatteringIteration = 1:settings.numberOfScatteringIterations
                 writeToLog(['Beginning scattering event ', num2str(scatteringIteration), '.'], true);
                 calcIncomingFlux(1:numel(Z), timeStep, scatteringIteration, simDir);
                 jobSize = mapProp.mapSize.^2; lastJobSize = 0;
-                
+
                 consolidateFlux(settings.numberOfJobs, jobSize, lastJobSize, timeStep, simDir);
             end
 
-			if (settings.calcEquiTemperature == false)
-				writeToLog('Calculating subsurface conduction.',true);
-				calcTemperature(1:numel(Z), time(timeStep + 1) - time(timeStep), timeStep, simDir);
-				consolidateTemperature(settings.numberOfJobs, jobSize, lastJobSize, timeStep, simDir);
-			else
-				writeToLog('Calculating only equilibrium temperatures',true);
-			end
+            if (settings.calcEquiTemperature == false)
+                writeToLog('Calculating subsurface conduction.',true);
+                calcTemperature(1:numel(Z), time(timeStep + 1) - time(timeStep), timeStep, simDir);
+                consolidateTemperature(settings.numberOfJobs, jobSize, lastJobSize, timeStep, simDir);
+            else
+                writeToLog('Calculating only equilibrium temperatures',true);
+            end
 
-			writeToLog(['TimeStep ', num2str(timeStep), ' has been completed.'], true);
-		end
+            writeToLog(['TimeStep ', num2str(timeStep), ' has been completed.'], true);
+        end
 
-	elseif (settings.numberOfJobs > 1)
-		% Divide into jobs.
-		for ( timeStep = firstk:(lastk-1) )
-			writeToLog(['Beginning timeStep ', num2str(timeStep), '.'], true);
-			writeToLog('Sending flux jobs:');
+    elseif (settings.numberOfJobs > 1)
+        % Divide into jobs.
+        for ( timeStep = firstk:(lastk-1) )
+            writeToLog(['Beginning timeStep ', num2str(timeStep), '.'], true);
+            writeToLog('Sending flux jobs:');
 
-			for ( ii=1:settings.numberOfJobs )
-				% Send flux jobs:
-				[elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
-	            jobName = ['Flux', num2str(ii),'_',settings.simulationName];
-	            % Truncate at 8 characters due to qsub's limitation:
-	            jobName = jobName(1:8);
-	            outputPath = [settings.dirPath.logs,'Flux/Flux', num2str(ii), '.out']
-	            errorPath = [settings.dirPath.logs,'Flux/Flux', num2str(ii), '.err']
-	            args=['elementRangeMax="', num2str(elementRangeMax),'",elementRangeMin="', num2str(elementRangeMin),'",simDir="', simDir,'",timeStep="', num2str(timeStep), '"'];
-	            command = sprintf(['ssh liorr@chemfarm ''qsub -N ', jobName ,' -v ',args,' -e ', errorPath, ' -o ', outputPath,' ',settings.dirPath.src,'/calcIncomingFlux.pbs''']);
-	            writeToLog(command, true);
-	            
-	            [status, output] = system(command);
-	            writeToLog(output,true);
-	            writeToLog(['Sending job ',jobName]);
-	        end
+            for ( ii=1:settings.numberOfJobs )
+                % Send flux jobs:
+                [elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
+                jobName = ['Flux', num2str(ii),'_',settings.simulationName];
+                % Truncate at 8 characters due to qsub's limitation:
+                jobName = jobName(1:8);
+                outputPath = [settings.dirPath.logs,'Flux/Flux', num2str(ii), '.out']
+                errorPath = [settings.dirPath.logs,'Flux/Flux', num2str(ii), '.err']
+                args=['elementRangeMax="', num2str(elementRangeMax),'",elementRangeMin="', num2str(elementRangeMin),'",simDir="', simDir,'",timeStep="', num2str(timeStep), '"'];
+                command = sprintf(['ssh liorr@chemfarm ''qsub -N ', jobName ,' -v ',args,' -e ', errorPath, ' -o ', outputPath,' ',settings.dirPath.src,'/calcIncomingFlux.pbs''']);
+                writeToLog(command, true);
+
+                [status, output] = system(command);
+                writeToLog(output,true);
+                writeToLog(['Sending job ',jobName]);
+            end
 
             waitToFinish(30, simDir);
 
@@ -418,38 +446,38 @@ if (settings.runFluxAndTemperature)
 
             % If the user asked conduction temperature to be calculated:
             if (settings.calcEquiTemperature == false)
-	        	
-	        	writeToLog('Sending conduction temperature jobs.');
-	            
-	            for (ii=1:settings.numberOfJobs)
-				    % Send temperature jobs:
-		            [elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
-		            jobName = ['Temperature', num2str(ii),'_',settings.simulationName];
-		            % Truncate at 8 characters due to qsub's limitation:
-		            jobName = jobName(1:8);
-		            outputPath = [settings.dirPath.logs,'Temperature/Temperature', num2str(ii), '.out']
-		            errorPath = [settings.dirPath.logs,'Temperature/Temperature', num2str(ii), '.err']
-		            args=['elementRangeMax="', num2str(elementRangeMax),'",elementRangeMin="', num2str(elementRangeMin),'",simDir="', simDir,'",timeStep="', num2str(timeStep), '",dt="', num2str(time(timeStep + 1) - time(timeStep)), '"'];
-		            command = sprintf(['ssh liorr@chemfarm ''qsub -N ', jobName ,' -v ',args,' -e ', errorPath, ' -o ', outputPath,' ',settings.dirPath.src,'/calcTemperature.pbs''']);
-		            writeToLog(command, true);
 
-		            [status, output] = system(command);
-		            writeToLog(output,true);
-		            writeToLog(['Sending job ',jobName]);
-		        end
+                writeToLog('Sending conduction temperature jobs.');
 
-	            waitToFinish(30, simDir);
+                for (ii=1:settings.numberOfJobs)
+                    % Send temperature jobs:
+                    [elementRangeMax, elementRangeMin] = calculateIterationSize(ii, jobSize, lastJobSize, settings.numberOfJobs, mapProp.mapSize);
+                    jobName = ['Temperature', num2str(ii),'_',settings.simulationName];
+                    % Truncate at 8 characters due to qsub's limitation:
+                    jobName = jobName(1:8);
+                    outputPath = [settings.dirPath.logs,'Temperature/Temperature', num2str(ii), '.out']
+                    errorPath = [settings.dirPath.logs,'Temperature/Temperature', num2str(ii), '.err']
+                    args=['elementRangeMax="', num2str(elementRangeMax),'",elementRangeMin="', num2str(elementRangeMin),'",simDir="', simDir,'",timeStep="', num2str(timeStep), '",dt="', num2str(time(timeStep + 1) - time(timeStep)), '"'];
+                    command = sprintf(['ssh liorr@chemfarm ''qsub -N ', jobName ,' -v ',args,' -e ', errorPath, ' -o ', outputPath,' ',settings.dirPath.src,'/calcTemperature.pbs''']);
+                    writeToLog(command, true);
 
-	            % Consolidate the temperature vectore and put it in the Tsurf.mat file:
-				consolidateTemperature(settings.numberOfJobs, jobSize, lastJobSize, timeStep, simDir);
-			end
-			writeToLog('****************************************************');
-			writeToLog('****************************************************');
-			writeToLog(['**********TimeStep ', num2str(timeStep), ' has been completed.**********'], true);
-			writeToLog('****************************************************');
-			writeToLog('****************************************************');
-		end
-	end
+                    [status, output] = system(command);
+                    writeToLog(output,true);
+                    writeToLog(['Sending job ',jobName]);
+                end
+
+                waitToFinish(30, simDir);
+
+                % Consolidate the temperature vectore and put it in the Tsurf.mat file:
+                consolidateTemperature(settings.numberOfJobs, jobSize, lastJobSize, timeStep, simDir);
+            end
+            writeToLog('****************************************************');
+            writeToLog('****************************************************');
+            writeToLog(['**********TimeStep ', num2str(timeStep), ' has been completed.**********'], true);
+            writeToLog('****************************************************');
+            writeToLog('****************************************************');
+        end
+    end
 end
 
 writeToLog('Simulation has ended.',true);

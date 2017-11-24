@@ -5,23 +5,23 @@ function [mapProp, physProp, constants] = makeConfig(simDir)
 
     %% Map properties:
     mapProp.scaleFactor                         = 1;                    % m pixels^-1
-    mapProp.latitude                    = 85;                   % Degrees.
+    mapProp.latitude                    = 80;                   % Degrees.
     mapProp.zAxis = 0.01*(cumprod(ones(1,36) * 1.13) - 1.13);          % Meters
 
     % Properties related to model-generated surfaces:
-    mapProp.mapSize                             = 41;                   % Pixels.
+    mapProp.mapSize                             = 101;                   % Pixels.
     % Spherical craters:
-    mapProp.depthToDiameter                     = 0.1;
+    mapProp.depthToDiameter                     = 0;
     mapProp.sphericalCraterRadius       = 22;                   % Pixels.
     % Random surfaces:
-    mapProp.rmsSlope                            = 15;                   % Degrees.
+    mapProp.rmsSlope                            = 25;                   % Degrees.
 
     %% Physical properties:
     % General parameters:
-    physProp.distanceFromSun            = 0.31;                 % AU.
+    physProp.distanceFromSun            = 1;                 % AU.
     physProp.sunRadius              = 695e3;        % km
-    physProp.solarDeclination           = 0.1;                  % Degrees.
-    physProp.rotationPeriod                     = 1.521e7;      % Seconds.
+    physProp.solarDeclination           = 0;                  % Degrees.
+    physProp.rotationPeriod                     = 86400 * 27.3;      % Seconds.
     physProp.initialSubSurfTemp         = 150;
     physProp.geothermalFlux                     = 0;                    % W m^2;
 

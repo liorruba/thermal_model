@@ -19,10 +19,10 @@ function [settings] = makeSettings(simDir)
     settings.simulationName 					= simDirName;
 
     % Simulation settings:
-    settings.initializationLengthInSolarDays	= 1;
+    settings.initializationLengthInSolarDays	= 0;
     settings.timeStepsPerDayIni					= 20;
     settings.simulationLengthInSolarDays		= 1;
-    settings.timeStepsPerDaySim					= 120;
+    settings.timeStepsPerDaySim					= 720;
     settings.runRCM								= false;
     settings.runVFM								= false;
     settings.runShadow							= true;

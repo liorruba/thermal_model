@@ -1,4 +1,4 @@
-function[shadowMatrix, solarFluxMatrix] = calcShadowMatrix(solarIncidenceAngle, solarAzimuth, simDir)
+function[shadowMatrix, shadowDepthMatrix, solarFluxMatrix] = calcShadowMatrix(solarIncidenceAngle, solarAzimuth, simDir)
 % This function calculates BOTH the shadow function AND the resulting
 % insolation map on the surface.
 
@@ -19,7 +19,7 @@ function[shadowMatrix, solarFluxMatrix] = calcShadowMatrix(solarIncidenceAngle, 
 
 	% Initialize the shadow matrix:
 	shadowMatrix = zeros(size(Z));
-	mutualShadowMatrix = zeros(size(Z));
+	shadowDepthMatrix = zeros(size(Z));
 
 	% Else, continue calculating the shadow matrix:
 	
@@ -136,14 +136,27 @@ function[shadowMatrix, solarFluxMatrix] = calcShadowMatrix(solarIncidenceAngle, 
 
 	    distanceVector = sqrt((Y(facetLinearIndex) + addition - V(:,2)).^2 + (X(facetLinearIndex) + addition - V(:,1)).^2);
 	    slopeTangentToOtherPoint = heightDiffVector ./ distanceVector;
-    	
+    	logicalSlopeComparison = slopeTangentToOtherPoint(1:end) >= tand(90 - solarIncidenceAngle);
+        
     	% Start comparing the slope tangent to other point vector from the 3rd place, since
         % the first index is the facet and the second index is the closest facet
         % in order to prevent discretization errors.
-	    if any(slopeTangentToOtherPoint(1:end) >= tand(90 - solarIncidenceAngle))
-	        shadowMatrix(facetLinearIndex) = true;        
-	    elseif any(slopeTangentToOtherPoint(1:end) >= tand(90 - solarIncidenceAngle))
-	        mutualShadowMatrix(facetLinearIndex) = true;
+	    if any(logicalSlopeComparison)
+	        shadowMatrix(facetLinearIndex) = true;
+            
+            % Create a vector of all facets casting a shadow on the facet
+            % of interest.
+            whoShadowed = logicalSlopeComparison .* zVector;
+            whoShadowed(whoShadowed == 0) = NaN;
+            [maxZ, maxX] = max(whoShadowed);
+            
+            % Set the reference plane as the mean of the 1D profile:
+            z0 = mean(zVector);
+            shadowDepthMatrix(facetLinearIndex) = (maxZ - z0) - (Z(facetLinearIndex) - z0) - distanceVector(maxX) .* cotd(solarIncidenceAngle);
+            true;
+        else
+            shadowMatrix(facetLinearIndex) = false;
+            shadowDepthMatrix(facetLinearIndex) = 0;
 	    end
     end
 
