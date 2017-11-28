@@ -2,6 +2,7 @@
 % Thermal model of airless planetary bodies      %
 % Written by Lior Rubanenko                      %
 % Weizmann Institute of Science, Rehovot, Israel %
+% University of Los-Angeles, California, USA 	 %
 % October 2014 -June 2015                        %
 % ...                                            %
 % Modified Sep 2016 to support variable thermal  %
@@ -260,21 +261,29 @@ end
 writeToLog('Begining shadow and solar flux calculation.');
 
 if (settings.runShadow)
-    writeToLog('Sending shadow jobs.',true);
+    writeToLog('Calculating shadow matrices.',true);
     for timeStep=1:length(solarZenithAngle)
-        % If there is already a solar flux matrix for the current timestep, continue:
+        % If the solar flux matrix for the current timestep exists, skip calculation:
         if exist([settings.dirPath.output, 'Shadow/solarFluxMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'file')
             writeToLog(['Solar flux map for incidence ', num2str(solarAzimuth(timeStep)), ' and azimuth ', num2str(solarZenithAngle(timeStep)), ' already exists.'], true);
             continue;
         end
         
-        % If the solar incidence matrix is not in [0,90], the sun is below the horizon (everything is shadowed):
-        if (solarZenithAngle(timeStep) < 0 || solarZenithAngle(timeStep) >= 90)
-            solarFluxMatrix = true(size(Z));
+        % Show progress:
+        if (mod(timeStep,1) == 0)
+            progressBar = [num2str(2*timeStep/length(solarZenithAngle) * 100), ' %'];
+            fprintf(progressBar);
+            fprintf(repmat('\b',1,length(progressBar)-1));
+        end
+        
+        % Calculate the Sun's angular size in the sky:
+        [finiteSunZenithAngle, finiteSunAzimuth] = finiteSunCoordinates(solarZenithAngle(timeStep), solarAzimuth(timeStep), simDir);
+        
+        % If the solar incidence matrix is not in < 90 degrees + angular solar radius, the sun is below the horizon (everything is shadowed):
+        if (finiteSunZenithAngle(end) >= 90)
+            solarFluxMatrix = ones(size(Z));
             save([settings.dirPath.output, 'Shadow/solarFluxMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)) ,'.mat'], 'solarFluxMatrix');
-        else
-            [finiteSunZenithAngle, finiteSunAzimuth] = finiteSunCoordinates(solarZenithAngle(timeStep), solarAzimuth(timeStep), simDir);
-            
+        else            
             for sunPix = 1:numel(finiteSunZenithAngle)
                 [buffShad, buffShadDepth, buffSolar] = calcShadowMatrix(finiteSunZenithAngle(sunPix), finiteSunAzimuth(sunPix), simDir);
                 shadowMatrix(:,:,sunPix) = buffShad;
@@ -282,7 +291,7 @@ if (settings.runShadow)
                 solarFluxMatrix(:,:,sunPix) = buffSolar;
             end
             
-            shadowMatrix = any(shadowMatrix,3);
+            shadowMatrix = all(shadowMatrix,3);
             shadowDepthMatrix = min(shadowDepthMatrix,[],3);
             solarFluxMatrix = sum(solarFluxMatrix,3);
             

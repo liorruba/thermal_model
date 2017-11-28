@@ -9,12 +9,12 @@ function [mapProp, physProp, constants] = makeConfig(simDir)
     mapProp.zAxis = 0.01*(cumprod(ones(1,36) * 1.13) - 1.13);          % Meters
 
     % Properties related to model-generated surfaces:
-    mapProp.mapSize                             = 101;                   % Pixels.
+    mapProp.mapSize                             = 51;                   % Pixels.
     % Spherical craters:
-    mapProp.depthToDiameter                     = 0;
-    mapProp.sphericalCraterRadius       = 22;                   % Pixels.
+    mapProp.depthToDiameter                     = 0.2;
+    mapProp.sphericalCraterRadius       = 48;                   % Pixels.
     % Random surfaces:
-    mapProp.rmsSlope                            = 25;                   % Degrees.
+    mapProp.rmsSlope                            = 20;                   % Degrees.
 
     %% Physical properties:
     % General parameters:
@@ -26,7 +26,7 @@ function [mapProp, physProp, constants] = makeConfig(simDir)
     physProp.geothermalFlux                     = 0;                    % W m^2;
 
     % Optical parameters:
-    physProp.albedo                             = 0.08;
+    physProp.albedo                             = 0.136;
     physProp.meanEmissivity             = 0.95;
 
     % Thermal parameters:

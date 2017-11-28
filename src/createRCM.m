@@ -5,11 +5,6 @@ load([settings.dirPath.config, 'bin/constants.mat']);
 load([settings.dirPath.config, 'bin/physProp.mat']);
 load([settings.dirPath.config, 'bin/mapProp.mat']);
 
-% If an RCM file already exists in the output directory, skip this function.
-if (exist([settings.dirPath.output,'RCM/RCM',elementRange], 'file'))
-    writeToLog('An RCM file already exists in the output directory, skipping to next step.');
-end
-
 % Loading the topography:
 load([settings.dirPath.input,'Z.mat']);
 
