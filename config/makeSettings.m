@@ -23,11 +23,11 @@ function [settings] = makeSettings(simDir)
     settings.timeStepsPerDayIni					= 20;
     settings.simulationLengthInSolarDays		= 1;
     settings.timeStepsPerDaySim					= 60;
-    settings.runRCM								= false;
-    settings.runVFM								= false;
+    settings.runRCM								= true;
+    settings.runVFM								= true;
     settings.runShadow							= true;
-    settings.runFluxAndTemperature				= false;
-    settings.calcEquiTemperature				= false;
+    settings.runFluxAndTemperature				= true;
+    settings.calcEquiTemperature				= true;
     settings.removePreviousFiles				= false;
 
     % More settings:
