@@ -8,12 +8,6 @@ load([settings.dirPath.config, 'bin/constants.mat']);
 load([settings.dirPath.config, 'bin/physProp.mat']);
 load([settings.dirPath.config, 'bin/mapProp.mat']);
 
-% Quit the script if there is already a solar flux matrix for the current timestep:
-if exist([settings.dirPath.output, 'Shadow/solarFluxMatrix_', num2str(solarAzimuth), '_', num2str(solarIncidenceAngle) ,'.mat'], 'file')
-    writeToLog(['Solar flux map for incidence ', num2str(solarIncidenceAngle), ' and azimuth ', num2str(solarAzimuth), ' already exists.'], true);
-    return;
-end
-
 % Loading the topography:
 load([settings.dirPath.input,'Z.mat']);
 

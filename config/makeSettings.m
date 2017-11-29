@@ -10,10 +10,6 @@ function [settings] = makeSettings(simDir)
     settings.dirPath.logs = [simDir,'/logs/'];
     settings.dirPath.config = [simDir,'/config/'];
 
-    % In order to parallelize the model, enter how many jobs to run on each iteration:
-    % (FOR THE STANDALONE VERSION, SET THIS TO 1.)
-    settings.numberOfJobs 					= 1;
-
     % Simulation name:
     [~,simDirName,~] = fileparts(simDir);
     settings.simulationName 					= simDirName;
@@ -22,7 +18,7 @@ function [settings] = makeSettings(simDir)
     settings.initializationLengthInSolarDays	= 0;
     settings.timeStepsPerDayIni					= 20;
     settings.simulationLengthInSolarDays		= 1;
-    settings.timeStepsPerDaySim					= 60;
+    settings.timeStepsPerDaySim					= 1440;
     settings.runRCM								= true;
     settings.runVFM								= true;
     settings.runShadow							= true;
