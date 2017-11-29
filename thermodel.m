@@ -107,7 +107,7 @@ if settings.createSphericalCrater
     if exist([settings.dirPath.input,'Z.mat'], 'file');
         delete([settings.dirPath.input,'Z.mat']);
     end
-    writeToLog(['Creating topography: spherical crater with depth to diameter ', num2str(mapProp.depthToDiameter)]);
+    writeToLog(['Creating topography: spherical crater with depth to diameter ', num2str(mapProp.depthToDiameter)],true);
     Z = sphericalCrater(mapProp.sphericalCraterRadius, mapProp.depthToDiameter, mapProp.mapSize);
     
 elseif settings.createRandomSurface
@@ -116,9 +116,8 @@ elseif settings.createRandomSurface
         delete([settings.dirPath.input,'Z.mat']);
     end
     
-    writeToLog(['Creating random topography: Gaussian slope distribution with RMS slope ', num2str(mapProp.rmsSlope)]);
+    writeToLog(['Creating random topography: Gaussian slope distribution with RMS slope ', num2str(mapProp.rmsSlope)], true);
     Z = gaussianRandomSurface(mapProp.mapSize, mapProp.rmsSlope);
-    
 else
     writeToLog('Using a custom topography from the input folder.', true);
     if exist([settings.dirPath.input,'Z.mat'],'file')
