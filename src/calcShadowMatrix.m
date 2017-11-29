@@ -1,5 +1,5 @@
 function[shadowMatrix, shadowDepthMatrix, solarFluxMatrix] = calcShadowMatrix(solarIncidenceAngle, solarAzimuth, simDir)
-% This function calculates BOTH the shadow function and the resulting
+% This function calculates BOTH the shadow function AND the resulting
 % insolation map on the surface.
 
 % Load configuration files and assign variables:
@@ -24,21 +24,18 @@ shadowDepthMatrix = zeros(size(Z));
 % Else, continue calculating the shadow matrix:
 
 [X,Y] = meshgrid(-fix((length(Z) / 2)):fix((length(Z) / 2)), -fix((length(Z) / 2)):fix((length(Z) / 2)));
-minX = min(X(:));
 maxX = max(X(:));
+maxY = max(Y(:));
 
 % Slopes and aspect:
 [dX, dY] = gradient(Z);
-[dTHETA, dR] = cart2pol(dX, dY);
-slopeField = atand(dR);
-slopeAspectField = radtodeg(dTHETA) - 180;
-
-%% More calculations:
-azimuthAngleQuadrant = mod(floor([solarAzimuth]/90), 4) + 1;
+[THETA, R] = cart2pol(dX, dY);
+slopeField = atand(R);
+slopeAspectField = - 180 + radtodeg(THETA);
 
 %%
 %
-%  Beginning of the shadowing model:
+%  Beginning of the ray casting model:
 %
 
 %%  Calculating the solar shading matrix:
@@ -46,70 +43,59 @@ writeToLog(['Calculating shadow matrix for Zenith angle ', num2str(solarIncidenc
 % Iterate over all the facets in the Z grid, and check which
 % one is hidden from the sun:
 for facetLinearIndex = 1:numel(Z)
-    x = @(y) X(facetLinearIndex) + (y - Y(facetLinearIndex))./tand(solarAzimuth);
-    y = @(x) Y(facetLinearIndex) + tand(solarAzimuth) * (x - X(facetLinearIndex));
-    
-    if (solarAzimuth > 0 && solarAzimuth < 45)    
-        idx = Y == floor(y(X));
+    % Calculating the linear function y = tan(theta) * x + b
+    % that is passing through all the grid facets in the
+    % direction of the sun.
+    fx = @(y) X(facetLinearIndex) + (y - Y(facetLinearIndex)) / tand(solarAzimuth);
+    fy = @(x) tand(solarAzimuth)*(x - X(facetLinearIndex)) + Y(facetLinearIndex);
+
+    if (solarAzimuth > 45 && solarAzimuth <= 135)
+        y = linspace(Y(facetLinearIndex), maxY, 101);
+        x = fx(y);
+        z = qinterp2(X, Y, Z, x, y);
         
-    elseif (solarAzimuth > 45 && solarAzimuth <= 90)
-        idx = X == floor(x(Y));
+    elseif (solarAzimuth > 225 && solarAzimuth <= 315)
+        y = linspace(Y(facetLinearIndex), -maxY, 101);
+        x = fx(y);
+        z = qinterp2(X, Y, Z, x, y);
         
-    elseif (solarAzimuth > 90 && solarAzimuth <= 135)
-        idx = X == ceil(x(Y));
+    elseif (solarAzimuth > 135 && solarAzimuth <= 225)
+        x = linspace(X(facetLinearIndex), -maxX, 101);
+        y = fy(x);
+        z = qinterp2(X, Y, Z, x, y);
         
-    elseif (solarAzimuth > 135 && solarAzimuth <= 180)
-        idx = Y == floor(y(X));
-        
-	elseif (solarAzimuth > 180 && solarAzimuth <= 225)
-        idx = Y == ceil(y(X));
-        
-	elseif (solarAzimuth > 225 && solarAzimuth <= 270)
-        idx = X == ceil(x(Y));
-        
-	elseif (solarAzimuth > 270 && solarAzimuth <= 315)
-        idx = X == floor(x(Y));
-        
-	elseif (solarAzimuth > 315 && solarAzimuth <= 360)
-        idx = Y == floor(y(X));
+    else 
+        x = linspace(X(facetLinearIndex), maxX, 101);
+        y = fy(x);
+        z = qinterp2(X, Y, Z, x, y);
     end
+
+    %   And Finally, calculating the slope:
+    heightDiffVector = z - Z(facetLinearIndex);
+%     clf; pcolor(X,Y,Z); hold on; plot(x(~isnan(z)), y(~isnan(z)),'r','LineWidth',2); axis equal; drawnow; 
     
-    if (azimuthAngleQuadrant == 1)
-        idx(X < X(facetLinearIndex) | Y < Y(facetLinearIndex)) = 0;
-    elseif (azimuthAngleQuadrant == 2)
-        idx(X > X(facetLinearIndex) | Y < Y(facetLinearIndex)) = 0;
-    elseif (azimuthAngleQuadrant == 3)
-        idx(X > X(facetLinearIndex) | Y > Y(facetLinearIndex)) = 0;
-    elseif (azimuthAngleQuadrant == 4)
-        idx(X < X(facetLinearIndex) | Y > Y(facetLinearIndex)) = 0;
-    end
-    
-    % zVector is the vector of Z(X,Y) on the line connecting the examined
-    % facet to the sun;
-    zVector = Z(idx);
-    
-    % Finally, calculating the slope:
-    heightDiffVector = zVector - Z(facetLinearIndex);
-    distanceVector = sqrt((X(idx) - X(facetLinearIndex)).^2 + (Y(idx) - Y(facetLinearIndex)).^2);
+    distanceVector = sqrt((y - Y(facetLinearIndex)).^2 + (x - X(facetLinearIndex)).^2);
     slopeTangentToOtherPoint = heightDiffVector ./ distanceVector;
-    
-    % Compare the "slope tangent to other point" vector to the tangent of
-    % the incidence angle:
     logicalSlopeComparison = slopeTangentToOtherPoint(1:end) >= tand(90 - solarIncidenceAngle);
+%     clf; plot(distanceVector, z); axis equal; hold on; 
+%     plot(distanceVector, distanceVector.*tand(90 - solarIncidenceAngle) + Z(facetLinearIndex));
+%     plot(distanceVector, z.*logicalSlopeComparison); drawnow;
     
-    if any(logicalSlopeComparison(2:end))
+    % Start comparing the slope tangent to other point vector from the 3rd place, since
+    % the first index is the facet and the second index is the closest facet
+    % in order to prevent discretization errors.
+    if any(logicalSlopeComparison)
         shadowMatrix(facetLinearIndex) = true;
         
         % Create a vector of all facets casting a shadow on the facet
         % of interest.
-        whoShadowed = logicalSlopeComparison .* zVector(1 :end);
+        whoShadowed = logicalSlopeComparison .* z;
         whoShadowed(whoShadowed == 0) = NaN;
-        [maxZ, maxX] = max(whoShadowed);
+        [maxZ, maxD] = max(whoShadowed);
         
         % Set the reference plane as the mean of the 1D profile:
-        referencePlane = mean(zVector(1:end));
-        shadowDepthMatrix(facetLinearIndex) = (maxZ - referencePlane) - (Z(facetLinearIndex) - referencePlane) - distanceVector(maxX) .* cotd(solarIncidenceAngle);
-        true;
+        z0 = mean(z);
+        shadowDepthMatrix(facetLinearIndex) = (maxZ - z0) - (Z(facetLinearIndex) - z0) - distanceVector(maxD) .* cotd(solarIncidenceAngle);
     else
         shadowMatrix(facetLinearIndex) = false;
         shadowDepthMatrix(facetLinearIndex) = 0;
@@ -124,5 +110,5 @@ solarFluxMatrix = (constants.earthSolarConstant ./ settings.finiteSunArea )./ ph
 
 %  Removing values lower than zero (due to negative incidence angle).
 solarFluxMatrix(solarFluxMatrix < 0) = 0;
-return;
+end
 

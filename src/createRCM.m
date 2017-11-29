@@ -58,8 +58,8 @@ for tileLinearIndex = elementRange
     c = 0:stepResolution:1;
     
     %   Preallocation of variables.
-    tracedRayMatrix = false(3, numberOfElementsInZ, length(c) - 2);
-    surfaceHeightMatrix = false(length(R),1);
+%     tracedRayMatrix = false(3, numberOfElementsInZ, length(c) - 2);
+%     surfaceHeightMatrix = false(length(R),1);
     
     
     % Traced ray matrix:
