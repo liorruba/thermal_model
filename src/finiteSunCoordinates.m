@@ -47,5 +47,5 @@ elseif settings.finiteSunArea == 9
     
     finiteSunAzimuth = wrapTo360(finiteSunAzimuth);
 else
-    error("settings.finiteSunArea must be either 1 or 9 pixels.");
+    error('settings.finiteSunArea must be either 1 or 9 pixels.');
 end
