@@ -212,6 +212,7 @@ writeToLog('Begining shadow and solar flux calculation.');
 
 if (settings.runShadow)
     writeToLog('Calculating shadow matrices.',true);
+    fprintf("Progress: ");
     for timeStep=1:length(solarZenithAngle)       
         % Show progress:
         if (mod(timeStep,1) == 0)
@@ -233,7 +234,7 @@ if (settings.runShadow)
         for sunPix = 1:numel(finiteSunZenithAngle)
             if (finiteSunZenithAngle(sunPix) >= 90)
                 shadowMatrix(:,:,sunPix) = ones(size(Z));
-                shadowDepthMatrix(:,:,sunPix) = zeros(size(Z));
+                shadowDepthMatrix(:,:,sunPix) = NaN(size(Z));
                 solarFluxMatrix(:,:,sunPix) = zeros(size(Z));
             else
                 [buffShad, buffShadDepth, buffSolar] = calcShadowMatrix(finiteSunZenithAngle(sunPix), finiteSunAzimuth(sunPix), simDir);
