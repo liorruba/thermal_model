@@ -71,9 +71,6 @@ for facetLinearIndex = 1:numel(Z)
     distanceVector = sqrt((y - Y(facetLinearIndex)).^2 + (x - X(facetLinearIndex)).^2);
     slopeTangentToOtherPoint = heightDiffVector ./ distanceVector;
     logicalSlopeComparison = slopeTangentToOtherPoint(1:end) >= tand(90 - solarIncidenceAngle);
-%     clf; plot(distanceVector, z); axis equal; hold on; 
-%     plot(distanceVector, distanceVector.*tand(90 - solarIncidenceAngle) + Z(facetLinearIndex));
-%     plot(distanceVector, z.*logicalSlopeComparison); drawnow;
     
     % Start comparing the slope tangent to other point vector from the 3rd place, since
     % the first index is the facet and the second index is the closest facet
