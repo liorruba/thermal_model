@@ -88,7 +88,7 @@ for facetLinearIndex = 1:numel(Z)
         [maxZ, maxD] = max(whoShadowed);
         
         % Set the reference plane as the mean of the 1D profile:
-        z0 = mean(z);
+        z0 = mean(z(~isnan(z)));
         shadowDepthMatrix(facetLinearIndex) = (maxZ - z0) - (Z(facetLinearIndex) - z0) - distanceVector(maxD) .* cotd(solarIncidenceAngle);
     else
         shadowMatrix(facetLinearIndex) = false;
