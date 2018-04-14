@@ -216,9 +216,9 @@ if (settings.runShadow)
     for timeStep=1:length(solarZenithAngle)       
         % Show progress:
         if (mod(timeStep,1) == 0)
-            progressBar = [num2str(timeStep/length(solarZenithAngle) * 100), ' %'];
+            progressBar = [num2str(round(timeStep/length(solarZenithAngle) * 100,2)), '%%'];
             fprintf(progressBar);
-            fprintf(repmat('\b',1,length(progressBar)-1));
+            fprintf(repmat('\b',1,length(progressBar)-1))
         end
         
         % Quit the script if there is already a solar flux matrix for the current timestep:
