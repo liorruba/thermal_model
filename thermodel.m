@@ -212,7 +212,7 @@ writeToLog('Begining shadow and solar flux calculation.');
 
 if (settings.runShadow)
     writeToLog('Calculating shadow matrices.',true);
-    fprintf("Progress: ");
+    fprintf('Progress: ');
     for timeStep=1:length(solarZenithAngle)       
         % Show progress:
         if (mod(timeStep,1) == 0)
