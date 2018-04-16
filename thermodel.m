@@ -259,7 +259,7 @@ if (settings.runShadow)
         
         % Create permanent shadow (and depth) matrices
         for timeStep=1:length(solarZenithAngle)
-            if (solarZenithAngle(timeStep) < 90)
+            if (solarZenithAngle(timeStep) <= 90)
                 % Load the shadow and shadow depth matrices:
                 load([settings.dirPath.output, 'Shadow/shadowMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)),'.mat']);
                 load([settings.dirPath.output, 'Shadow/shadowDepthMatrix_', num2str(solarAzimuth(timeStep)), '_', num2str(solarZenithAngle(timeStep)),'.mat']);
