@@ -7,9 +7,9 @@ The basic equations used to write this model can here found [here](https://www.s
 
 ## Basic instructions and validations
 ### Installation
-Download or clone this repository into a directory of your choosing. The main model directory is composed of three directories and a script file called ```thermodel.m```. The directory ```src``` contains all the source files, ```config``` the config files and ```input``` the topography input file of size NxN (a .mat file with a custom DTM).
+Download or clone this repository into a directory of your choosing. The main model directory is composed of three directories and a script file called ```thermodel.m```. The directory ```src``` contains all the source files, ```config``` the config files and ```input``` the topography input file of size N x N (a .mat file with a custom DTM).
 
-After running the main script of the application, two more directories will be created: ```output``` and ```logs```, containing (wait for it...) the output files and logs. ```output``` will contain the main output file, ```Tsurf.mat``` - a NxNxM matlab matrix showing the surface temperature of the topography for time steps 1...M.
+After running the main script of the application, two more directories will be created: ```output``` and ```logs```, containing (wait for it...) the output files and logs. ```output``` will contain the main output file, ```Tsurf.mat``` - a N x N x M Matlab array showing the surface temperature of the topography for time steps 1...M.
 
 ### Illumination model
 One way to validate this illumination model is to compare its output to that of an analytic model. For example, according to [this](https://www.sciencedirect.com/science/article/abs/pii/001910359290016Z) model, the temperature of a lunar hemispherical (bowl shaped) crater with depth/diameter = 0.2, found at latitude 80 degrees assuming zero obliquity, is ~154 K. To test our code compared to this analytic result, use the following settings:
@@ -72,6 +72,8 @@ Next, make sure matlab is properly [aliased](http://manpages.ubuntu.com/manpages
 ``` 
 matlab -nodesktop -nosplash -r thermodel 
 ```
+
+
 
 ## Known issues and bugs:
 1. The conduction model becomes unstable for temperature dependent heat conductivity and volumetric heat capacity if those are updated at too-large time steps. It is recommended to update these parameters *every* time step when solving problems with highly variable irradiation.
