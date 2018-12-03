@@ -73,7 +73,15 @@ Next, make sure matlab is properly [aliased](http://manpages.ubuntu.com/manpages
 matlab -nodesktop -nosplash -r thermodel 
 ```
 
+The result should look like that:
+![hemispherical crater temperature](./readme/crater_temp.png)
 
+Where the shadowed part of the craters has the same equiilbrium temperatures (as the view factor of a spherical cavity is uniform).
+
+A cross section through the crater should look like that:
+![hemispherical crater cross section](./readme/crater_temp_flux_plot.png)
+
+The temperature inside the crater matches the Ingersoll et al. 1992 temperature.
 
 ## Known issues and bugs:
 1. The conduction model becomes unstable for temperature dependent heat conductivity and volumetric heat capacity if those are updated at too-large time steps. It is recommended to update these parameters *every* time step when solving problems with highly variable irradiation.
