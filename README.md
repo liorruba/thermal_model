@@ -3,7 +3,7 @@
 The heat flux incident upon the surface of airless planetary bodies is dominated by solar radiation during the day, and by thermal emission from topography at night. The model presented here calculates the temeprature distribution of airless surfaces accounting for insolation, reflected and emitted radiation and subsurface conduction. The model with written in Matlab to emphasize readability and ease of use. 
 
 ## Methods
-The basic equations used to write this model can here found [here](https://www.sciencedirect.com/science/article/abs/pii/S001910351630656X). 
+The basic equations used in this model can be found [here](https://www.sciencedirect.com/science/article/abs/pii/S001910351630656X). 
 
 ## Basic instructions and validations
 ### Installation
