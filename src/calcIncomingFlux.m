@@ -31,7 +31,11 @@ else
    
     % At night, load the previous time step (to avoid convergence issues):
     if (TsurfEqui == 0)
-        TsurfEqui = fTsurf.Tsurf(:,:,timeStep - 1);
+        if timeStep == 1
+                TsurfEqui = fTsurf.Tsurf(:,:,1);
+        else
+                TsurfEqui = fTsurf.Tsurf(:,:,timeStep - 1);
+        end
     end
 
 end
