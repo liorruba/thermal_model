@@ -353,11 +353,17 @@ if (settings.runFluxAndTemperature)
 
     % If the model runs as a stand alone:
     for (timeStep = firstk:(lastk-1))
+        %  A new time step:
+        writeToLog(['Beginning time step ', num2str(timeStep), '.'], true);
+
+        % During the night, there's no point in calculating equilibrium temperatures:
+        if ((settings.calcEquiTemperature == true) & (solarZenithAngle(timeStep) > 90))
+            continue
+        end
+    
         if (mod(timeStep, 5)) == 0
             copyfile('output/Tsurf.mat','output/Tsurf_bu.mat', 'f');
         end
-        
-        writeToLog(['Beginning time step ', num2str(timeStep), '.'], true);
         
         for scatteringIteration = 1:settings.numberOfScatteringIterations
             writeToLog(['Beginning scattering event ', num2str(scatteringIteration), '.'], true);
